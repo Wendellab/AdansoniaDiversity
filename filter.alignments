@@ -1,0 +1,23 @@
+#!/usr/bin/bash
+
+ml py-cogent/1.9-py2-openmpi3-vcgcck7
+ml parallel 
+
+sed 's/[.]sort[.]resort[.]bam_//g' $1 | sed 's/N/-/g' > ${1%.fasta}.tmp.fasta
+
+
+
+python - << END
+
+import sys
+from cogent import LoadSeqs, DNA
+
+aln = LoadSeqs("${1%.fasta}.tmp.fasta", moltype=DNA, format='fasta')
+filtered_aln = aln.omitGapSeqs(0.90)
+filtered_gaps = filtered_aln.omitGapPositions(0.3)
+filtered_gaps.writeToFile("${1%.fasta}.Nfil.fasta")
+
+END
+
+sed -i.bak 's/-/N/g' ${1%.fasta}.Nfil.fasta
+rm  ${1%.fasta}.tmp.fasta
